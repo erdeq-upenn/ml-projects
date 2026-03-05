@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.utils.data import DataLoader, TensorDataset
 from sklearn.metrics import (
     accuracy_score, f1_score, roc_auc_score, precision_score, recall_score,
@@ -8,36 +9,35 @@ from sklearn.metrics import (
 
 
 class _Net(nn.Module):
-    def __init__(self, input_dim):
+    def __init__(self):
         super().__init__()
         self.net = nn.Sequential(
-            nn.Linear(input_dim, 64),
+            nn.Linear(784, 256),
             nn.ReLU(),
             nn.Dropout(0.3),
-            nn.Linear(64, 32),
+            nn.Linear(256, 128),
             nn.ReLU(),
             nn.Dropout(0.3),
-            nn.Linear(32, 1),
-            nn.Sigmoid(),
+            nn.Linear(128, 10),
         )
 
     def forward(self, x):
-        return self.net(x).squeeze(1)
+        return self.net(x)
 
 
 def run(X_train, X_test, y_train, y_test):
     """Returns (metrics_dict, predict_fn) where predict_fn(X) -> (preds, probs)."""
     torch.manual_seed(42)
 
-    dataset = TensorDataset(torch.tensor(X_train), torch.tensor(y_train))
-    loader = DataLoader(dataset, batch_size=32, shuffle=True)
+    dataset = TensorDataset(torch.tensor(X_train), torch.tensor(y_train, dtype=torch.long))
+    loader = DataLoader(dataset, batch_size=64, shuffle=True)
 
-    model = _Net(X_train.shape[1])
+    model = _Net()
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
-    criterion = nn.BCELoss()
+    criterion = nn.CrossEntropyLoss()
 
     model.train()
-    for epoch in range(50):
+    for epoch in range(10):
         total_loss = 0.0
         for X_batch, y_batch in loader:
             optimizer.zero_grad()
@@ -46,24 +46,25 @@ def run(X_train, X_test, y_train, y_test):
             optimizer.step()
             total_loss += loss.item()
         avg_loss = total_loss / len(loader)
-        print(f"  Epoch {epoch + 1:02d}/50 — loss: {avg_loss:.4f}")
+        print(f"  Epoch {epoch + 1:02d}/10 — loss: {avg_loss:.4f}")
 
     model.eval()
 
     def predict_fn(X):
         with torch.no_grad():
-            probs = model(torch.tensor(X)).numpy()
-        return (probs > 0.5).astype(int), probs
+            logits = model(torch.tensor(X))
+            probs = F.softmax(logits, dim=1).numpy()
+        return np.argmax(probs, axis=1), probs
 
     y_pred, y_prob = predict_fn(X_test)
 
     metrics = {
         "Model": "PyTorch (Neural Net)",
         "Accuracy": accuracy_score(y_test, y_pred),
-        "F1": f1_score(y_test, y_pred),
-        "AUC-ROC": roc_auc_score(y_test, y_prob),
-        "Precision": precision_score(y_test, y_pred),
-        "Recall": recall_score(y_test, y_pred),
+        "F1": f1_score(y_test, y_pred, average="weighted"),
+        "AUC-ROC": roc_auc_score(y_test, y_prob, multi_class="ovr", average="macro"),
+        "Precision": precision_score(y_test, y_pred, average="weighted"),
+        "Recall": recall_score(y_test, y_pred, average="weighted"),
     }
 
     return metrics, predict_fn

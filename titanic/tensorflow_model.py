@@ -20,7 +20,7 @@ def run(X_train, X_test, y_train, y_test):
     ])
 
     model.compile(optimizer="adam", loss="binary_crossentropy")
-    model.fit(X_train, y_train, epochs=50, batch_size=32, validation_split=0.1, verbose=0)
+    model.fit(X_train, y_train, epochs=50, batch_size=32, validation_split=0.1, verbose=1)
 
     y_prob = model.predict(X_test, verbose=0).flatten()
     y_pred = (y_prob > 0.5).astype(int)

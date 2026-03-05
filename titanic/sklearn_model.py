@@ -6,7 +6,7 @@ from sklearn.metrics import (
 
 def run(X_train, X_test, y_train, y_test):
     """Returns (metrics_dict, predict_fn) where predict_fn(X) -> (preds, probs)."""
-    model = GradientBoostingClassifier(n_estimators=100, random_state=42)
+    model = GradientBoostingClassifier(n_estimators=100, random_state=42, verbose=1)
     model.fit(X_train, y_train)
 
     y_pred = model.predict(X_test)
