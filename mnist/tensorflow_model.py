@@ -13,15 +13,16 @@ def run(X_train, X_test, y_train, y_test):
     tf.random.set_seed(42)
 
     model = tf.keras.Sequential([
-        tf.keras.layers.Dense(256, activation="relu", input_shape=(784,)),
+        tf.keras.layers.Dense(256, activation="relu", input_shape=(X_train.shape[1],)),
         tf.keras.layers.Dropout(0.3),
         tf.keras.layers.Dense(128, activation="relu"),
         tf.keras.layers.Dropout(0.3),
         tf.keras.layers.Dense(10, activation="softmax"),
     ])
 
-    model.compile(optimizer="adam", loss="sparse_categorical_crossentropy")
-    model.fit(X_train, y_train, epochs=10, batch_size=64, validation_split=0.1, verbose=1)
+    model.compile(optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"])
+    es = tf.keras.callbacks.EarlyStopping(monitor="val_loss", patience=3, restore_best_weights=True)
+    model.fit(X_train, y_train, epochs=10, batch_size=64, validation_split=0.1, verbose=1, callbacks=[es])
 
     y_prob = model.predict(X_test, verbose=0)  # (N, 10)
     y_pred = np.argmax(y_prob, axis=1)

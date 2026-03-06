@@ -1,7 +1,5 @@
 import os
-import ssl
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-ssl._create_default_https_context = ssl._create_unverified_context
 
 import numpy as np
 from typing import NamedTuple
@@ -18,9 +16,16 @@ class DataSplit(NamedTuple):
 
 
 def load_mnist() -> DataSplit:
+    import ssl
     import tensorflow as tf
 
-    (X_train, y_train), (X_test, y_test) = tf.keras.datasets.mnist.load_data()
+    # Scoped SSL bypass for the download only (corporate proxy with self-signed cert)
+    _orig_ctx = ssl._create_default_https_context
+    ssl._create_default_https_context = ssl._create_unverified_context
+    try:
+        (X_train, y_train), (X_test, y_test) = tf.keras.datasets.mnist.load_data()
+    finally:
+        ssl._create_default_https_context = _orig_ctx
 
     X_train = X_train.reshape(-1, 784).astype(np.float32) / 255.0
     X_test = X_test.reshape(-1, 784).astype(np.float32) / 255.0

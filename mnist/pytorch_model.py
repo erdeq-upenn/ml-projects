@@ -29,10 +29,17 @@ def run(X_train, X_test, y_train, y_test):
     """Returns (metrics_dict, predict_fn) where predict_fn(X) -> (preds, probs)."""
     torch.manual_seed(42)
 
+    device = torch.device(
+        "cuda" if torch.cuda.is_available()
+        else "mps" if torch.backends.mps.is_available()
+        else "cpu"
+    )
+    print(f"  [PyTorch] using device: {device}")
+
     dataset = TensorDataset(torch.tensor(X_train), torch.tensor(y_train, dtype=torch.long))
     loader = DataLoader(dataset, batch_size=64, shuffle=True)
 
-    model = _Net()
+    model = _Net().to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
     criterion = nn.CrossEntropyLoss()
 
@@ -40,6 +47,7 @@ def run(X_train, X_test, y_train, y_test):
     for epoch in range(10):
         total_loss = 0.0
         for X_batch, y_batch in loader:
+            X_batch, y_batch = X_batch.to(device), y_batch.to(device)
             optimizer.zero_grad()
             loss = criterion(model(X_batch), y_batch)
             loss.backward()
@@ -52,8 +60,8 @@ def run(X_train, X_test, y_train, y_test):
 
     def predict_fn(X):
         with torch.no_grad():
-            logits = model(torch.tensor(X))
-            probs = F.softmax(logits, dim=1).numpy()
+            logits = model(torch.tensor(X).to(device))
+            probs = F.softmax(logits, dim=1).cpu().numpy()
         return np.argmax(probs, axis=1), probs
 
     y_pred, y_prob = predict_fn(X_test)

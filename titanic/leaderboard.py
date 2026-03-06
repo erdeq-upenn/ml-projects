@@ -2,7 +2,7 @@ from tabulate import tabulate
 
 
 def print_leaderboard(results: list[dict]):
-    sorted_results = sorted(results, key=lambda x: x["Accuracy"], reverse=True)
+    sorted_results = sorted(results, key=lambda x: x["AUC-ROC"], reverse=True)
 
     rows = [
         [
