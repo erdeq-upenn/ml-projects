@@ -44,7 +44,12 @@ def main():
     predictors.append({"name": "Sklearn", "fn": fn, "scaled": True})
 
     print("[2/3] Training TensorFlow (Neural Net)...")
-    m, fn = tensorflow_model.run(split.X_train_scaled, split.X_test_scaled, split.y_train, split.y_test)
+    m = tensorflow_model.train_and_save(
+        split.X_train_scaled, split.y_train,
+        split.X_test_scaled, split.y_test,
+        split.scaler,
+    )
+    fn = tensorflow_model.load_and_predict()
     metrics_list.append(m)
     predictors.append({"name": "TensorFlow", "fn": fn, "scaled": True})
 

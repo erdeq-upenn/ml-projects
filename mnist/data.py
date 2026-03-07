@@ -13,6 +13,7 @@ class DataSplit(NamedTuple):
     X_test_scaled: np.ndarray
     y_train: np.ndarray
     y_test: np.ndarray
+    scaler: StandardScaler
 
 
 def load_mnist() -> DataSplit:
@@ -36,4 +37,4 @@ def load_mnist() -> DataSplit:
     X_train_scaled = scaler.fit_transform(X_train).astype(np.float32)
     X_test_scaled = scaler.transform(X_test).astype(np.float32)
 
-    return DataSplit(X_train, X_test, X_train_scaled, X_test_scaled, y_train, y_test)
+    return DataSplit(X_train, X_test, X_train_scaled, X_test_scaled, y_train, y_test, scaler)

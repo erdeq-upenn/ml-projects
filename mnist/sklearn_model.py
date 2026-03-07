@@ -7,8 +7,12 @@ from sklearn.metrics import (
 def run(X_train, X_test, y_train, y_test):
     """Returns (metrics_dict, predict_fn) where predict_fn(X) -> (preds, probs)."""
     model = MLPClassifier(
-        hidden_layer_sizes=(256, 128), max_iter=50, random_state=42, verbose=True,
-        early_stopping=True, n_iter_no_change=10,
+        hidden_layer_sizes=(256, 128),
+        max_iter=50,
+        random_state=42,
+        verbose=True,
+        early_stopping=True,
+        n_iter_no_change=10,
     )
     model.fit(X_train, y_train)
 
